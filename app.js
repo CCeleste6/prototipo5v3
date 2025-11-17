@@ -1,6 +1,5 @@
 /* =========================
    App principal - prototipo5v2
-  
    ========================= */
 
 // --- Constantes de Chave ---
@@ -9,7 +8,7 @@ const XP_PER_KEY = "cfg_xp_per_acerto";
 const XP_NEEDED_KEY = "cfg_xp_needed";
 const ALUNOS_KEY = "legado_alunos";
 const INVENT_KEY = "legado_invent";
-const LAST_ALUNO_KEY = "legado_last_aluno"; // <-- NOVO: Lembrar último aluno
+const LAST_ALUNO_KEY = "legado_last_aluno"; 
 
 const DEFAULTS = {
   pmFixed: 10,
@@ -182,7 +181,6 @@ function renderQuizForm() {
 }
 
 /* ---------- RENDER VANTAGENS (escolhas) ---------- */
-// GRANDE MUDANÇA AQUI
 function renderVantagensPanel() {
   const current = getCurrent();
   if (!current) return;
@@ -395,18 +393,20 @@ function wireEvents() {
     const casa = el("input-casa").value;
     createOrLoadStudent(name, casa);
   });
+  // Eventos dos novos botões do HTML
   el("btn-switch-student").addEventListener("click", switchStudent);
+  el("btn-delete-student").addEventListener("click", deleteStudent); 
 
   // Quiz
   el("btn-iniciar-quiz").addEventListener("click", () => {
     renderQuizForm();
     el("quiz-panel").hidden = false;
-    el("setup-panel").hidden = true; // esconde setup
-    el("aluno-panel").hidden = true; // esconde painel do aluno
+    el("setup-panel").hidden = true; 
+    el("aluno-panel").hidden = true; 
   });
   el("btn-cancel-quiz").addEventListener("click", closeQuiz);
   el("btn-submit-quiz").addEventListener("click", submitQuiz);
-  el("btn-close-results").addEventListener("click", closeQuizResults); // NOVO
+  el("btn-close-results").addEventListener("click", closeQuizResults); // <-- EVENTO CORRIGIDO!
 
   // Vantagens
   el("btn-vantagens").addEventListener("click", () => {
@@ -443,7 +443,6 @@ function wireEvents() {
     el("config-panel").hidden = true;
   });
   el("btn-close-config").addEventListener("click", () => el("config-panel").hidden = true);
-  el("btn-delete-student").addEventListener("click", deleteStudent); // NOVO
 }
 
 /* ---------- helpers UI ---------- */
@@ -461,7 +460,7 @@ function init() {
   if (localStorage.getItem(XP_PER_KEY) === null) localStorage.setItem(XP_PER_KEY, DEFAULTS.xpPerAcerto);
   if (localStorage.getItem(XP_NEEDED_KEY) === null) localStorage.setItem(XP_NEEDED_KEY, DEFAULTS.xpNeeded);
 
-  // NOVO: Tenta carregar o último aluno logado
+  // Tenta carregar o último aluno logado
   const lastAluno = loadLastAluno();
   if (lastAluno && loadAlunos()[lastAluno]) {
     state.currentStudent = lastAluno;

@@ -2,7 +2,7 @@
    ARQUIVO DE VANTAGENS - ATUALIZADO
    As chaves (200, 2600, 6200) agora representam
    o "PM MÍNIMO" necessário para desbloquear 
-   a escolha daquele ranque de vantagens.
+   a escolha daquele ranque de vantagens. 
    ================================================================= */
 
 window.VANTAGENS = {

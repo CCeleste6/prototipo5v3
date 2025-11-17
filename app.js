@@ -1,6 +1,5 @@
 /* =========================
    App principal - prototipo5v2
-  
    ========================= */
 
 // --- Constantes de Chave ---
@@ -110,8 +109,8 @@ function createOrLoadStudent(name, casa) {
     saveAlunos(students);
   }
   state.currentStudent = name;
-  saveLastAluno(name); // <-- NOVO: Lembra dele
-  el("setup-panel").hidden = true; // <-- NOVO: Esconde setup
+  saveLastAluno(name); 
+  el("setup-panel").hidden = true; 
   renderMain();
 }
 
@@ -182,7 +181,6 @@ function renderQuizForm() {
 }
 
 /* ---------- RENDER VANTAGENS (escolhas) ---------- */
-// GRANDE MUDANÇA AQUI
 function renderVantagensPanel() {
   const current = getCurrent();
   if (!current) return;
@@ -398,6 +396,7 @@ function wireEvents() {
     createOrLoadStudent(name, casa);
   });
   el("btn-switch-student").addEventListener("click", switchStudent);
+  
 
   // Quiz
   el("btn-iniciar-quiz").addEventListener("click", () => {
@@ -473,6 +472,13 @@ function init() {
   } else {
     el("setup-panel").hidden = false;
   }
+  
+  // *** CORREÇÃO DE SEGURANÇA PARA O POP-UP ILEGAL ***
+  const resultsOverlay = document.getElementById("results-overlay");
+  if (resultsOverlay) {
+    resultsOverlay.hidden = true;
+  }
+
   renderMain();
 }
 

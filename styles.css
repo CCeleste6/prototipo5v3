@@ -349,3 +349,18 @@ footer {
   color: rgba(255, 255, 255, 0.5);
   font-size: 13px;
 }
+/* --- Melhoria para exibir o texto de Requisito das novas vantagens --- */
+.vant-req-text {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 4px 0 8px 24px;
+    font-style: italic;
+    border-left: 2px solid rgba(45, 212, 191, 0.5);
+    padding-left: 8px;
+}
+.vant-effect {
+    font-size: 14px;
+    color: var(--accent);
+    margin-left: 24px;
+    font-weight: 600;
+}

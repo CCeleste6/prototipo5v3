@@ -1,6 +1,6 @@
 /* =========================
    App principal - prototipo5v2
- 
+  
    ========================= */
 
 // --- Constantes de Chave ---

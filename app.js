@@ -1,8 +1,9 @@
 /* =========================
-   App principal - prototipo5v2
+   App principal - prototipo5v3
+  
    ========================= */
 
-// --- Constantes de Chave ---
+// --- Constantes de Chave --
 const PM_KEY = "cfg_pm_fixed";
 const XP_PER_KEY = "cfg_xp_per_acerto";
 const XP_NEEDED_KEY = "cfg_xp_needed";
@@ -109,8 +110,8 @@ function createOrLoadStudent(name, casa) {
     saveAlunos(students);
   }
   state.currentStudent = name;
-  saveLastAluno(name); 
-  el("setup-panel").hidden = true; 
+  saveLastAluno(name); // <-- NOVO: Lembra dele
+  el("setup-panel").hidden = true; // <-- NOVO: Esconde setup
   renderMain();
 }
 
@@ -189,7 +190,7 @@ function renderVantagensPanel() {
   const container = el("vantagens-list");
   container.innerHTML = "";
   
-  // Pega as chaves (ex: 200, 2600, 6200), ordena, e renderiza
+  // Pega as chaves (ex: 0, 200, 600, etc), ordena, e renderiza
   const rankThresholds = Object.keys(list).map(Number).sort((a, b) => a - b);
   
   rankThresholds.forEach(rankPM => {
@@ -209,12 +210,19 @@ function renderVantagensPanel() {
       const checked = current.chosenAdvantages && current.chosenAdvantages[rankPM] === v.id ? "checked" : "";
       const disabled = !isUnlocked ? "disabled" : "";
       
+      // *** MODIFICAÇÃO CRÍTICA AQUI: Renderiza o texto do requisito e os bônus ***
       html += `
         <div class="vant-item">
           <input type="radio" name="rank-${rankPM}" id="${id}" value="${v.id}" ${checked} ${disabled}>
-          <label for="${id}">${v.nome} ${v.bonus ? `( +${v.bonus} PC )` : ""} ${v.multiplier ? `(x${v.multiplier})` : ""}</label>
+          <label for="${id}">${v.nome}</label>
+          <div class="vant-req-text">Requisito: ${v.req_text}</div>
+          <div class="vant-effect">
+            ${v.pc_gain ? `( Bônus Fixo: +${v.pc_gain} PC )` : ''}
+            ${v.pc_multiplier ? `( Multiplica Pontuação por x${v.pc_multiplier} )` : ''}
+          </div>
         </div>
       `;
+      // **************************************************************************
     });
     block.innerHTML += html;
     container.appendChild(block);
@@ -228,7 +236,7 @@ function saveChosenVantagens() {
   const casa = current.casa;
   const list = VANTAGENS[casa] || {};
 
-  // Itera os ranques de PM (200, 2600, etc)
+  // Itera os ranques de PM (0, 200, 600, etc)
   Object.keys(list).forEach(rankPM => {
     // Só salva se o aluno pode (deveria estar desabilitado, mas é bom verificar)
     if (current.pm >= Number(rankPM)) {
@@ -245,7 +253,7 @@ function saveChosenVantagens() {
   const students = loadAlunos();
   students[current.nome] = current;
   saveAlunos(students);
-  alert("Vantagens salvas.");
+  alert("Vantagens salvas. Lembre-se que bônus fixos (+PC) são aplicados manualmente, já que suas regras são externas ao quiz.");
   renderMain();
 }
 
@@ -255,7 +263,10 @@ function applyAdvantagesOnResult(correctCount) {
   if (!current) return 0;
   let pcGain = 0;
   
-  // Itera as vantagens escolhidas { "200": "p1", "2600": "p5" }
+  // As novas vantagens são baseadas em eventos externos (prazos, participação, projetos).
+  // Apenas as vantagens com o *multiplicador* são aplicadas no fim do quiz para manter a lógica anterior.
+  // Bônus fixos (+PC) DEVERÃO ser aplicados manualmente no painel de estatísticas quando o requisito for atendido.
+  
   for (const rankPM in current.chosenAdvantages) {
     const advId = current.chosenAdvantages[rankPM];
     
@@ -265,13 +276,16 @@ function applyAdvantagesOnResult(correctCount) {
     const adv = advList.find(a => a.id === advId);
     if (!adv) continue;
     
-    // Aplica bônus
-    if (adv.bonus) pcGain += adv.bonus;
-    if (adv.multiplier) {
+    // *** MODIFICAÇÃO CRÍTICA AQUI: Aplicamos APENAS o multiplicador para o PC do quiz ***
+    if (adv.pc_multiplier) {
       const xpPer = cfg(XP_PER_KEY, DEFAULTS.xpPerAcerto);
-      pcGain += Math.round(adv.multiplier * correctCount * (xpPer / 2));
+      // Mantém a fórmula anterior que multiplica o bônus de PC baseado no XP do quiz
+      // Nota: o adv.pc_multiplier é usado aqui.
+      pcGain += Math.round(adv.pc_multiplier * correctCount * (xpPer / 2));
     }
     
+    // NENHUMA LÓGICA DE pc_gain FIXO É APLICADA AQUI, JÁ QUE AS REGRAS SÃO EXTERNAS.
+
     // Registra no inventário global
     const inv = loadInvent();
     inv.push({
@@ -279,8 +293,8 @@ function applyAdvantagesOnResult(correctCount) {
       aluno: current.nome,
       casa: current.casa,
       vantagem: adv.nome,
-      bonus: adv.bonus || null,
-      multiplier: adv.multiplier || null,
+      pc_gain: adv.pc_gain || null, // Novo nome
+      pc_multiplier: adv.pc_multiplier || null, // Novo nome
       timestamp: new Date().toISOString()
     });
     saveInvent(inv);
@@ -303,7 +317,7 @@ function submitQuiz() {
   const gainedXP = correct * xpPer;
   const pmFixed = cfg(PM_KEY, DEFAULTS.pmFixed);
   
-  // PC (via Vantagens)
+  // PC (via Vantagens) - Agora só aplica multiplicadores do quiz.
   const gainedPCFromVant = applyAdvantagesOnResult(correct);
 
   current.xp += gainedXP;
@@ -324,11 +338,12 @@ function submitQuiz() {
 
   // NOVO: Mostrar modal de resultados em vez de alert
   showQuizResults(correct, pmFixed, gainedPCFromVant, gainedXP);
+  renderMain(); // Atualiza painel principal após o save
 }
 
 // NOVO: Mostrar Modal de Resultados
 function showQuizResults(correct, pm, pc, xp) {
-  // CORREÇÃO: Usando document.getElementById() diretamente
+  // CORREÇÃO: Usando document.getElementById() para garantir o funcionamento
   document.getElementById("results-score-num").textContent = correct;
   document.getElementById("results-pm").textContent = pm;
   document.getElementById("results-pc").textContent = pc;
@@ -339,7 +354,7 @@ function showQuizResults(correct, pm, pc, xp) {
 
 // NOVO: Fechar Modal de Resultados
 function closeQuizResults() {
-  // CORREÇÃO: Usando document.getElementById() diretamente
+  // CORREÇÃO: Usando document.getElementById() para garantir o funcionamento
   document.getElementById("results-overlay").hidden = true;
   closeQuiz(); // Fecha o painel do quiz
 }
@@ -352,7 +367,13 @@ function renderInventarioList() {
   if (!arr.length) ul.innerHTML = "<li>(Nenhum registro)</li>";
   else arr.slice().reverse().forEach(it => {
     const li = document.createElement("li");
-    li.textContent = `${new Date(it.timestamp).toLocaleString()} — ${it.aluno} — ${it.vantagem} (${it.casa})`;
+    // Inclui a informação do pc_gain e pc_multiplier na lista de vantagens
+    const bonusText = it.pc_gain ? `+${it.pc_gain} PC` : '';
+    const multiplierText = it.pc_multiplier ? `x${it.pc_multiplier}` : '';
+    let effectText = [bonusText, multiplierText].filter(t => t).join(', ');
+    if (effectText) effectText = `(Efeito: ${effectText})`;
+
+    li.textContent = `${new Date(it.timestamp).toLocaleString()} — ${it.aluno} — ${it.vantagem} ${effectText} (${it.casa})`;
     ul.appendChild(li);
   });
 }
@@ -376,9 +397,10 @@ function renderRanking() {
 function exportInventCSV() {
   const arr = loadInvent();
   if (!arr.length) return alert("Nenhum histórico.");
-  let csv = "aluno,casa,vantagem,bonus,multiplier,timestamp\n";
+  // Usa os novos nomes de coluna
+  let csv = "aluno,casa,vantagem,pc_gain,pc_multiplier,timestamp\n";
   arr.forEach(r => {
-    csv += `"${r.aluno}","${r.casa}","${r.vantagem}","${r.bonus || ""}","${r.multiplier || ""}","${r.timestamp}"\n`;
+    csv += `"${r.aluno}","${r.casa}","${r.vantagem}","${r.pc_gain || ""}","${r.pc_multiplier || ""}","${r.timestamp}"\n`;
   });
   const blob = new Blob([csv], { type: "text/csv" });
   const a = document.createElement("a");
@@ -396,7 +418,6 @@ function wireEvents() {
     createOrLoadStudent(name, casa);
   });
   el("btn-switch-student").addEventListener("click", switchStudent);
-  
 
   // Quiz
   el("btn-iniciar-quiz").addEventListener("click", () => {
@@ -408,7 +429,7 @@ function wireEvents() {
   el("btn-cancel-quiz").addEventListener("click", closeQuiz);
   el("btn-submit-quiz").addEventListener("click", submitQuiz);
   
-  // CORREÇÃO: Usando document.getElementById() diretamente para garantir a ligação
+  // CORREÇÃO: Garante que o botão 'Ok' é ligado de forma direta e segura
   document.getElementById("btn-close-results").addEventListener("click", closeQuizResults); 
 
   // Vantagens
@@ -473,7 +494,7 @@ function init() {
     el("setup-panel").hidden = false;
   }
   
-  // *** CORREÇÃO DE SEGURANÇA PARA O POP-UP ILEGAL ***
+  // *** CORREÇÃO DE SEGURANÇA para garantir que o pop-up está escondido na inicialização ***
   const resultsOverlay = document.getElementById("results-overlay");
   if (resultsOverlay) {
     resultsOverlay.hidden = true;

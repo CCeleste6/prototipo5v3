@@ -406,7 +406,7 @@ function wireEvents() {
   });
   el("btn-cancel-quiz").addEventListener("click", closeQuiz);
   el("btn-submit-quiz").addEventListener("click", submitQuiz);
-  el("btn-close-results").addEventListener("click", closeQuizResults); // <-- EVENTO CORRIGIDO!
+ document.getElementById("btn-close-results").addEventListener("click", closeQuizResults);
 
   // Vantagens
   el("btn-vantagens").addEventListener("click", () => {

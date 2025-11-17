@@ -284,6 +284,13 @@ ul {
   justify-content: center;
   z-index: 100;
 }
+
+/* === SOLUÇÃO CRÍTICA PARA FORÇAR O OCULTAMENTO === */
+.modal-overlay[hidden] {
+  display: none !important;
+}
+/* ================================================ */
+
 #results-panel {
   max-width: 500px;
   width: 90%;

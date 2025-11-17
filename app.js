@@ -1,18 +1,20 @@
 /* =========================
-   App principal - prototipo5v3
+   App principal - prototipo5v2
   
    ========================= */
 
-// --- Constantes de Chave --
+// --- Constantes de Chave ---
 const PM_KEY = "cfg_pm_fixed";
+const PC_FIXED_KEY = "cfg_pc_fixed"; // <-- NOVO: PC Fixo por atividade
 const XP_PER_KEY = "cfg_xp_per_acerto";
 const XP_NEEDED_KEY = "cfg_xp_needed";
 const ALUNOS_KEY = "legado_alunos";
 const INVENT_KEY = "legado_invent";
-const LAST_ALUNO_KEY = "legado_last_aluno"; // <-- NOVO: Lembrar último aluno
+const LAST_ALUNO_KEY = "legado_last_aluno"; // <-- Lembrar último aluno
 
 const DEFAULTS = {
   pmFixed: 10,
+  pcFixed: 5, // <-- NOVO: Default PC Fixo
   xpPerAcerto: 10,
   xpNeeded: 100
 };
@@ -110,8 +112,8 @@ function createOrLoadStudent(name, casa) {
     saveAlunos(students);
   }
   state.currentStudent = name;
-  saveLastAluno(name); // <-- NOVO: Lembra dele
-  el("setup-panel").hidden = true; // <-- NOVO: Esconde setup
+  saveLastAluno(name); // <-- Lembra dele
+  el("setup-panel").hidden = true; // <-- Esconde setup
   renderMain();
 }
 
@@ -210,7 +212,7 @@ function renderVantagensPanel() {
       const checked = current.chosenAdvantages && current.chosenAdvantages[rankPM] === v.id ? "checked" : "";
       const disabled = !isUnlocked ? "disabled" : "";
       
-      // *** MODIFICAÇÃO CRÍTICA AQUI: Renderiza o texto do requisito e os bônus ***
+      // Renderiza o texto do requisito e os bônus
       html += `
         <div class="vant-item">
           <input type="radio" name="rank-${rankPM}" id="${id}" value="${v.id}" ${checked} ${disabled}>
@@ -222,7 +224,6 @@ function renderVantagensPanel() {
           </div>
         </div>
       `;
-      // **************************************************************************
     });
     block.innerHTML += html;
     container.appendChild(block);
@@ -257,15 +258,32 @@ function saveChosenVantagens() {
   renderMain();
 }
 
+/* ---------- APLICAR PC MANUALMENTE (NOVO) ---------- */
+function applyFixedPC() {
+  const current = getCurrent();
+  if (!current) return;
+  
+  const fixedPC = cfg(PC_FIXED_KEY, DEFAULTS.pcFixed);
+  if (fixedPC <= 0) return alert("Configure o PC Fixo (na seção Configurações) para um valor maior que zero.");
+  
+  if (!confirm(`Deseja adicionar manualmente ${fixedPC} PC ao aluno ${current.nome}?`)) {
+      return;
+  }
+  
+  current.pc += fixedPC;
+  
+  const students = loadAlunos();
+  students[current.nome] = current;
+  saveAlunos(students);
+  alert(`+${fixedPC} PC adicionados manualmente.`);
+  renderMain();
+}
+
 /* ---------- APLICAR vantagens ao finalizar atividade (quiz) ---------- */
 function applyAdvantagesOnResult(correctCount) {
   const current = getCurrent();
   if (!current) return 0;
   let pcGain = 0;
-  
-  // As novas vantagens são baseadas em eventos externos (prazos, participação, projetos).
-  // Apenas as vantagens com o *multiplicador* são aplicadas no fim do quiz para manter a lógica anterior.
-  // Bônus fixos (+PC) DEVERÃO ser aplicados manualmente no painel de estatísticas quando o requisito for atendido.
   
   for (const rankPM in current.chosenAdvantages) {
     const advId = current.chosenAdvantages[rankPM];
@@ -276,16 +294,12 @@ function applyAdvantagesOnResult(correctCount) {
     const adv = advList.find(a => a.id === advId);
     if (!adv) continue;
     
-    // *** MODIFICAÇÃO CRÍTICA AQUI: Aplicamos APENAS o multiplicador para o PC do quiz ***
+    // Aplicamos APENAS o multiplicador para o PC do quiz
     if (adv.pc_multiplier) {
       const xpPer = cfg(XP_PER_KEY, DEFAULTS.xpPerAcerto);
-      // Mantém a fórmula anterior que multiplica o bônus de PC baseado no XP do quiz
-      // Nota: o adv.pc_multiplier é usado aqui.
       pcGain += Math.round(adv.pc_multiplier * correctCount * (xpPer / 2));
     }
     
-    // NENHUMA LÓGICA DE pc_gain FIXO É APLICADA AQUI, JÁ QUE AS REGRAS SÃO EXTERNAS.
-
     // Registra no inventário global
     const inv = loadInvent();
     inv.push({
@@ -336,7 +350,7 @@ function submitQuiz() {
   students[current.nome] = current;
   saveAlunos(students);
 
-  // NOVO: Mostrar modal de resultados em vez de alert
+  // Mostrar modal de resultados em vez de alert
   showQuizResults(correct, pmFixed, gainedPCFromVant, gainedXP);
   renderMain(); // Atualiza painel principal após o save
 }
@@ -429,8 +443,11 @@ function wireEvents() {
   el("btn-cancel-quiz").addEventListener("click", closeQuiz);
   el("btn-submit-quiz").addEventListener("click", submitQuiz);
   
-  // CORREÇÃO: Garante que o botão 'Ok' é ligado de forma direta e segura
+  // Resultados do Quiz
   document.getElementById("btn-close-results").addEventListener("click", closeQuizResults); 
+  
+  // Ações do Aluno
+  el("btn-add-pc").addEventListener("click", applyFixedPC); // <-- NOVO: Aplica PC Fixo
 
   // Vantagens
   el("btn-vantagens").addEventListener("click", () => {
@@ -456,11 +473,13 @@ function wireEvents() {
   el("btn-config").addEventListener("click", () => {
     el("config-panel").hidden = false;
     el("cfg-pm").value = cfg(PM_KEY, DEFAULTS.pmFixed);
+    el("cfg-pc-fixed").value = cfg(PC_FIXED_KEY, DEFAULTS.pcFixed); // <-- NOVO: Carrega PC Fixo
     el("cfg-xp-per").value = cfg(XP_PER_KEY, DEFAULTS.xpPerAcerto);
     el("cfg-xp-needed").value = cfg(XP_NEEDED_KEY, DEFAULTS.xpNeeded);
   });
   el("btn-save-config").addEventListener("click", () => {
     localStorage.setItem(PM_KEY, Number(el("cfg-pm").value));
+    localStorage.setItem(PC_FIXED_KEY, Number(el("cfg-pc-fixed").value)); // <-- NOVO: Salva PC Fixo
     localStorage.setItem(XP_PER_KEY, Number(el("cfg-xp-per").value));
     localStorage.setItem(XP_NEEDED_KEY, Number(el("cfg-xp-needed").value));
     alert("Configurações salvas.");
@@ -482,10 +501,11 @@ function init() {
   wireEvents();
   // Garante que os defaults existem
   if (localStorage.getItem(PM_KEY) === null) localStorage.setItem(PM_KEY, DEFAULTS.pmFixed);
+  if (localStorage.getItem(PC_FIXED_KEY) === null) localStorage.setItem(PC_FIXED_KEY, DEFAULTS.pcFixed); // <-- NOVO: Default PC Fixo
   if (localStorage.getItem(XP_PER_KEY) === null) localStorage.setItem(XP_PER_KEY, DEFAULTS.xpPerAcerto);
   if (localStorage.getItem(XP_NEEDED_KEY) === null) localStorage.setItem(XP_NEEDED_KEY, DEFAULTS.xpNeeded);
 
-  // NOVO: Tenta carregar o último aluno logado
+  // Tenta carregar o último aluno logado
   const lastAluno = loadLastAluno();
   if (lastAluno && loadAlunos()[lastAluno]) {
     state.currentStudent = lastAluno;
@@ -494,7 +514,7 @@ function init() {
     el("setup-panel").hidden = false;
   }
   
-  // *** CORREÇÃO DE SEGURANÇA para garantir que o pop-up está escondido na inicialização ***
+  // CORREÇÃO DE SEGURANÇA para garantir que o pop-up está escondido na inicialização
   const resultsOverlay = document.getElementById("results-overlay");
   if (resultsOverlay) {
     resultsOverlay.hidden = true;

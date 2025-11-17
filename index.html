@@ -39,48 +39,35 @@
       <div class="stats">
         <div>PM: <span id="aluno-pm">0</span></div>
         <div>PC: <span id="aluno-pc">0</span></div>
-        <div>XP: <span id="aluno-xp">0</span> (<span id="aluno-lvl">0</span>)</div>
-        <div id="xp-bar"><div id="xp-fill"></div></div>
+        <div>XP: <span id="aluno-xp">0</span></div>
+        <div>Nível: <span id="aluno-lvl">0</span></div>
       </div>
+      <div id="xp-bar"><div id="xp-fill"></div></div>
 
       <div class="actions">
         <button id="btn-iniciar-quiz">Iniciar Quiz</button>
         <button id="btn-vantagens">Vantagens</button>
         <button id="btn-inventario">Inventário</button>
         <button id="btn-ranking">Ranking</button>
-        <button id="btn-config">Configurar</button>
-        <button id="btn-switch-student" class="btn-secondary">Trocar Aluno</button> </div>
-    </section>
-
-    <section class="panel" id="quiz-panel" hidden>
-      <h2>Quiz — 10 perguntas</h2>
-      <form id="quiz-form"></form>
-      <div class="quiz-actions">
-        <button id="btn-submit-quiz" type="button">Enviar respostas</button>
-        <button id="btn-cancel-quiz" type="button" class="btn-secondary">Cancelar</button>
+        <button id="btn-add-pc">Adicionar PC Fixo</button> <button id="btn-config" class="btn-secondary">Configurações</button>
+        <button id="btn-switch-student" class="btn-secondary">Trocar Aluno</button>
       </div>
     </section>
 
-    <div id="results-overlay" class="modal-overlay" hidden>
-      <section class="panel" id="results-panel">
-        <h2>Resultados do Quiz</h2>
-        <p class="results-score">Você acertou <strong id="results-score-num">X</strong>/10!</p>
-        <div class="results-gains">
-          <div>+<span id="results-pm">0</span> PM</div>
-          <div>+<span id="results-pc">0</span> PC (Vantagens)</div>
-          <div>+<span id="results-xp">0</span> XP</div>
-        </div>
-        <div class="panel-actions">
-          <button id="btn-close-results">Ok</button> </div>
-      </section>
-    </div>
+    <section class="panel" id="quiz-panel" hidden>
+      <h2>Quiz da Semana</h2>
+      <form id="quiz-form"></form>
+      <div class="quiz-actions">
+        <button id="btn-submit-quiz">Finalizar Quiz</button>
+        <button id="btn-cancel-quiz" class="btn-secondary">Cancelar</button>
+      </div>
+    </section>
 
     <section class="panel" id="vantagens-panel" hidden>
-      <h2>Escolher Vantagens (1 por ranque desbloqueado)</h2>
-      <div id="vantagens-list">
-        </div>
+      <h2>Vantagens da Casa</h2>
+      <div id="vantagens-list"></div>
       <div class="panel-actions">
-        <button id="btn-save-vantagens">Salvar escolhas</button>
+        <button id="btn-save-vantagens">Salvar Escolhas</button>
         <button id="btn-close-vantagens" class="btn-secondary">Fechar</button>
       </div>
     </section>
@@ -105,22 +92,37 @@
     <section class="panel" id="config-panel" hidden>
       <h2>Configurações</h2>
       <label>PM fixo por atividade: <input id="cfg-pm" type="number" min="0" /></label>
-      <label>XP por acerto: <input id="cfg-xp-per" type="number" min="1" /></label>
+      <label>PC fixo por atividade: <input id="cfg-pc-fixed" type="number" min="0" /></label> <label>XP por acerto: <input id="cfg-xp-per" type="number" min="1" /></label>
       <label>XP para evoluir (base): <input id="cfg-xp-needed" type="number" min="10" /></label>
       <div class="panel-actions">
         <button id="btn-save-config">Salvar</button>
-        <button id="btn-delete-student" class="btn-danger">Deletar Aluno Atual</button> <button id="btn-close-config" class="btn-secondary">Fechar</button>
+        <button id="btn-delete-student" class="btn-danger">Deletar Aluno Atual</button>
+        <button id="btn-close-config" class="btn-secondary">Fechar</button>
       </div>
     </section>
 
   </main>
-
-  <footer>
-    <small>Protótipo: manter em localhost / GitHub Pages</small>
+  
+  <footer id="footer">
+    <p>Desenvolvido para fins educacionais. Versão prototipo5v2.</p>
   </footer>
 
-  
+  <div class="modal-overlay" id="results-overlay" hidden>
+    <section class="panel" id="results-panel">
+      <h2>Resultados do Quiz</h2>
+      <div class="results-score">Você acertou <span id="results-score-num">0</span> de 10 perguntas!</div>
+      <div class="results-gains">
+        <div>PM Ganhos: <span id="results-pm">0</span></div>
+        <div>PC Bônus: <span id="results-pc">0</span></div>
+        <div>XP Ganhos: <span id="results-xp">0</span></div>
+      </div>
+      <div class="panel-actions" style="margin-top: 24px;">
+        <button id="btn-close-results" style="width: 100%;">OK</button>
+      </div>
+    </section>
+  </div>
+
   <script src="VANTAGENS.js"></script>
-  <script src="app.js"></script>
+  <script src="app (1).js"></script>
 </body>
 </html>

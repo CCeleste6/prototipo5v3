@@ -57,7 +57,7 @@ window.VANTAGENS = {
     6200: [
       { id: "g7", nome: "Julgamento Implacável", bonus: 60 },
       { id: "g8", nome: "Guardião Supremo", multiplier: 3, type: "multiplicador" },
-      { id: "g9": "Proteção Absoluta", bonus: 100 }
+      { id: "g9", nome: "Proteção Absoluta", bonus: 100 }
     ]
   },
   "Solidários": {

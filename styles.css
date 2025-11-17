@@ -270,7 +270,7 @@ ul {
 }
 
 
-/* --- Modal de Resultados (NOVO) --- */
+/* --- Modal de Resultados (CORRIGIDO) --- */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -306,7 +306,7 @@ ul {
   color: var(--accent);
 }
 
-/* --- Responsividade (NOVO) --- */
+/* --- Responsividade --- */
 @media (max-width: 768px) {
   .container {
     margin: 12px auto;
